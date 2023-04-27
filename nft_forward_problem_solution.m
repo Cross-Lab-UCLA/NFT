@@ -40,6 +40,10 @@ function nft_forward_problem_solution(subject_name, session_name, of, varargin)
 % default conductivity values
 cond = [0.33 0.0132 1.79 0.33];
 
+if isnumeric(session_name)
+    session_name = num2str(session_name);
+end
+
 mesh_name = subject_name;
 sensor_name = [subject_name '_' session_name '.sensors'];
 ss_name = [subject_name '_sourcespace.dip'];
@@ -122,7 +126,6 @@ if (mesh.num_boundaries == 3 && length(cond) == 4)
 end
 
 vol.cond = cond;
-
 
 if solver == 'bem'
     % generate model and model matrices
