@@ -148,9 +148,9 @@ function pushbutton4_Callback(hObject, eventdata, handles)
 subj_name = get(handles.editSubjName,'String');
 ses_name = get(handles.editSesName,'String');
 if isfield(handles,'SubjectFolder')
-    Warping_mesh('subjectdir', handles.SubjectFolder, 'subject', subj_name, 'session', ses_name);
+    Warping_meshLM('subjectdir', handles.SubjectFolder, 'subject', subj_name, 'session', ses_name);
 else
-    Warping_mesh('subject', subj_name, 'session', ses_name);
+    Warping_meshLM('subject', subj_name, 'session', ses_name);
 end
 
 
