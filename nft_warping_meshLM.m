@@ -49,7 +49,7 @@ function [warpedMNImesh, MNImesh, warping] = nft_warping_meshLM(subject_name, se
   [input_electrodes, eloc] = load_electrodes(elec_file, p);
 
 if plotting
-        figure;
+    figure;
     ax1 = nexttile;
 end
 
@@ -134,6 +134,11 @@ end
   end
   
   save([p fsubj '.bec'], 'Coord', '-ascii');
+  
+  % save mesh for pop_dipfit
+  smesh.TRI1 = Coord(:,2:4);
+  smesh.POS = Elem(:,2:4);
+  save([fsubj '_mesh.mat'], '-STRUCT', 'smesh');
 
   Info(1,1) = nl;
   if nl==3
@@ -206,9 +211,21 @@ function path = append_filesep(path)
 
 function [input_electrodes, eloc] = load_electrodes(elocfn, of)
 
-  eloc = readlocs(elocfn,'filetype','custom','format',{'labels' 'X' 'Y' 'Z' 'type' },'skiplines',1);   % subject's electrode locations
-  if ~strcmp(eloc(1).type,'FID') || ~strcmp(eloc(2).type,'FID') || ~strcmp(eloc(3).type,'FID')
-    error('Electrode file does not contain fiducials! Co-registration is done using the fiducials!')
+tt = importdata(elocfn);
+if contains(tt{1},'label')
+    skip = 1;
+else
+    skip = 0;
+end
+
+  eloc = readlocs(elocfn,'filetype','custom','format',{'labels' 'X' 'Y' 'Z' 'type' },'skiplines',skip);   % subject's electrode locations
+  
+  FID_ind = find(strcmp({eloc.type}, 'FID')==1);
+  
+  if length(FID_ind) < 3
+    error('Electrode file does not contain or has enough fiducials! Co-registration needs three fiducials!')
+  elseif FID_ind(1) ~= 1 && FID_ind(end) == length(eloc)
+    eloc = [eloc(FID_ind) eloc(1:FID_ind(1)-1)];
   end
 
   if ~strcmp(eloc(1).labels,'Nz')
@@ -230,7 +247,7 @@ function [input_electrodes, eloc] = load_electrodes(elocfn, of)
     elo(i,:) = [eloc(i).X eloc(i).Y eloc(i).Z];
   end
 
-  [d, elo] = warping_distafterwarping([0 0 0 0 0 90], elo, elo); % arrange orientation ??? check!
+  [d, elo] = warping_distafterwarping([0 0 0 0 0 90], elo, elo); 
 
   
   p = append_filesep(of);
@@ -280,7 +297,6 @@ function [MNImesh, electrodes, fiducials, index_kdm] = init_mesh(input_electrode
     else
       Elem = Escalp; Coord = Cscalp;
     end
-
     h = eeglab_plotmesh(Elem(:,2:4), Coord(:,2:4),[],1); hold on; axis on;
     h.FaceAlpha = 0.55;
     axis([-100 100 -200 100 -100 150])

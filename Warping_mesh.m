@@ -46,11 +46,11 @@ function varargout = Warping_mesh(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @Warping_mesh_OpeningFcn, ...
-                   'gui_OutputFcn',  @Warping_mesh_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @Warping_mesh_OpeningFcn, ...
+    'gui_OutputFcn',  @Warping_mesh_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -98,7 +98,7 @@ guidata(hObject, handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = Warping_mesh_OutputFcn(hObject, eventdata, handles) 
+function varargout = Warping_mesh_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -201,7 +201,7 @@ nl = str2num(get(handles.edit_nl, 'String'));
 if nl==4
     [Coord, Elem] = utilbem_add_mesh(Coord, Elem, Cbrain_w, handles.MNImesh.Ebrain);
 end
-    
+
 save([p fsubj '.bec'], 'Coord', '-ascii');
 
 
@@ -263,7 +263,7 @@ so(1+Ns*2:3*Ns, 6) = 1;
 
 
 % save source space
-save([p fsubj '_sourcespace.dip'], 'so', '-ascii'); 
+save([p fsubj '_sourcespace.dip'], 'so', '-ascii');
 
 
 set(handles.warpingpushbutton, 'String', 'Mesh Warped!');
@@ -332,9 +332,17 @@ handles.elocfn = [path file];
 if ~isequal(file, 0) && length(file) > 1
     eloc = readlocs([path file]);   % subject's electrode locations
     handles.eloc = eloc;
+
+    FID_ind = find(strcmp({eloc.type}, 'FID')==1);
+
+    if FID_ind(1) ~= 1 && FID_ind(end) == length(eloc)
+        eloc = [eloc(FID_ind) eloc(1:FID_ind(1)-1)];
+    end
+
     if ~strcmp(eloc(1).type,'FID') | ~strcmp(eloc(2).type,'FID') | ~strcmp(eloc(3).type,'FID')
         error('Electrode file does not contain fiducials! Co-registration is done using the fiducials!')
     end
+
     if ~strcmp(eloc(1).labels,'Nz')
         if ~strcmp(eloc(1).labels,'fidt9')
             warning('Fiducials are assumed to be in this order: [Nz LPA, RPA].')
@@ -345,13 +353,13 @@ if ~isequal(file, 0) && length(file) > 1
             eloc2(2)=eloc(1);
             eloc=eloc2;
         end
-        
+
     end
     sens_fn = [path file];
     for i = 1:length(eloc); elo(i,:) = [eloc(i).X eloc(i).Y eloc(i).Z]; end
     [d, elo] = warping_distafterwarping([0 0 0 0 0 90], elo, elo); % arrange orientation ??? check!
     ne = size(elo,1);
-    
+
     p = handles.MeshFolder; % save the files in mesh folder
     lof = length(p);
     if p(lof) ~= '/';   p(lof+1) = '/'; end;
@@ -393,9 +401,9 @@ a2 = max(Cscalp(:,2:4)) - min(Cscalp(:,2:4));
 rat = mean(a2./a1);
 % make the same scale with the mesh
 if rat>500
-    elo = elo * 1000; 
+    elo = elo * 1000;
 elseif rat>50
-    elo = elo * 100; 
+    elo = elo * 100;
 elseif rat>5
     elo = elo * 10;
 end
@@ -425,14 +433,14 @@ view(165, 10)
 if isfield(handles, 'input_electrodes')
     elo = handles.input_electrodes;
     [pos, Fd] = initial_registration(elo, elo(1:3,:), Cscalp, Fm);
-    
+
     % find the index of the electrodes that are close to the scalp
     [elox, dm] = warping_distmeshafterwarping([0 0 0 0 0 0], pos, Cscalp, Escalp);
     mdm = median(dm); sdm = std(dm);
     kdm = find((dm < 2*mdm)); % kdm gives the index of the electrodes close to the scalp
     index = [1:length(pos)]; rejected = setdiff(index,kdm)
 
-    
+
     handles.electrodes = pos;
     handles.fiducials = Fd;
     handles.index_kdm = kdm;
@@ -546,7 +554,7 @@ function [P1, P2] = find_new_points_for_reg(elo,F);
 % P1 is the mean for the ear fiducials
 % P2 is the upper point of the line that is perpendicular to the F1-F2-F3 plane
 %       that intersects the digitizer locations
- 
+
 ne = length(elo); % number of electrodes
 
 F1 = F(1,:); % nasion
@@ -590,7 +598,7 @@ P2 = r(rm,:);
 function [rw]=warp_lm(r,A,W,p)
 rw = r * A(1:3,1:3) + repmat(A(4,:), size(r,1), 1);
 for i = 1 : size(p,1)
-    U = sqrt(sum((r - repmat(p(i,:), size(r,1),1)).^2, 2));  
+    U = sqrt(sum((r - repmat(p(i,:), size(r,1),1)).^2, 2));
     rw = rw + U * W(i,:);
 end
 
@@ -688,15 +696,15 @@ function WriteSMESH(name,Coord,Elem,Regions)
 nnp=size(Coord,1);
 nel=size(Elem,1);
 if ~isempty(Regions)
-	nreg = size(Regions,1);
-	Reg = zeros(nreg, 6);
-	Reg(:,2:4) = Regions;
-	Reg(:,1) = 1:nreg;
-	Reg(:,5) = 1:nreg;
-	Reg(:,6) = -1;
+    nreg = size(Regions,1);
+    Reg = zeros(nreg, 6);
+    Reg(:,2:4) = Regions;
+    Reg(:,1) = 1:nreg;
+    Reg(:,5) = 1:nreg;
+    Reg(:,6) = -1;
 else
-	nreg = 0;
-	Reg = [];
+    nreg = 0;
+    Reg = [];
 end
 
 % make sure Node indices are correct
@@ -723,7 +731,7 @@ fprintf(fid, '# Part 4 - region list\n');
 fprintf(fid, '%d\n', nreg);
 
 if nreg > 0
-	fprintf(fid, '%d %f %f %f %d %d\n', Reg');
+    fprintf(fid, '%d %f %f %f %d %d\n', Reg');
 end
 
 fclose(fid);
