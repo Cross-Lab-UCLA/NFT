@@ -1,4 +1,4 @@
-function varargout = Warping_meshLM(varargin)
+function varargout = Warping_mesh(varargin)
 % WARPING_MESH M-file for Warping_mesh.fig
 %      WARPING_MESH, by itself, creates a new WARPING_MESH or raises the existing
 %      singleton*.
@@ -158,9 +158,7 @@ else
     Elem = handles.MNImesh.Escalp; Coord = Cscalp_w;
 end
 
-h = eeglab_plotmesh(Elem(:,2:4), Coord(:,2:4),[],1); hold on; axis on;
-h.FaceAlpha = 0.55;
-
+eeglab_plotmesh(Elem(:,2:4), Coord(:,2:4),[],1); hold; axis on;
 plot3(Ptm(:,1), Ptm(:,2), Ptm(:,3), 'b.')
 axis([-100 100 -200 100 -100 150])
 view(165, 10)
@@ -331,38 +329,32 @@ function pushbutton7_Callback(hObject, eventdata, handles)
 
 [file, path] = uigetfile('*.*');  % changed 01-06-2011
 handles.elocfn = [path file];
-
-tt = importdata(handles.elocfn);
-if contains(tt{1},'label')
-    skip = 1;
-else
-    skip = 0;
-end
-
 if ~isequal(file, 0) && length(file) > 1
-    eloc = readlocs(handles.elocfn,'filetype','custom','format',{'labels' 'X' 'Y' 'Z' 'type' },'skiplines',skip);   % subject's electrode locations
-    
+    eloc = readlocs([path file]);   % subject's electrode locations
+    handles.eloc = eloc;
+
     FID_ind = find(strcmp({eloc.type}, 'FID')==1);
 
-    if length(FID_ind) < 3
-        error('Electrode file does not contain or has enough fiducials! Co-registration needs three fiducials!')
-    elseif FID_ind(1) ~= 1 && FID_ind(end) == length(eloc)
+    if FID_ind(1) ~= 1 && FID_ind(end) == length(eloc)
         eloc = [eloc(FID_ind) eloc(1:FID_ind(1)-1)];
+    end
+
+    if ~strcmp(eloc(1).type,'FID') | ~strcmp(eloc(2).type,'FID') | ~strcmp(eloc(3).type,'FID')
+        error('Electrode file does not contain fiducials! Co-registration is done using the fiducials!')
     end
 
     if ~strcmp(eloc(1).labels,'Nz')
         if ~strcmp(eloc(1).labels,'fidt9')
             warning('Fiducials are assumed to be in this order: [Nz LPA, RPA].')
-            msgbox('Fiducials are assumed to be in this order: [Nz LPA, RPA]','','warn')
+            h = msgbox('Fiducials are assumed to be in this order: [Nz LPA, RPA]','','warn')
         else   % for .sfp files
             eloc2=eloc;
             eloc2(1)=eloc(2);
             eloc2(2)=eloc(1);
             eloc=eloc2;
         end
-    end
-    handles.eloc = eloc;
 
+    end
     sens_fn = [path file];
     for i = 1:length(eloc); elo(i,:) = [eloc(i).X eloc(i).Y eloc(i).Z]; end
     [d, elo] = warping_distafterwarping([0 0 0 0 0 90], elo, elo); % arrange orientation ??? check!
@@ -433,8 +425,8 @@ if size(Escalp,2) == 7
 else
     Elem = Escalp; Coord = Cscalp;
 end
-h = eeglab_plotmesh(Elem(:,2:4), Coord(:,2:4),[],1); hold on; axis on;
-h.FaceAlpha = 0.55;
+
+eeglab_plotmesh(Elem(:,2:4), Coord(:,2:4),[],1); hold on; axis on;
 axis([-100 100 -200 100 -100 150])
 view(165, 10)
 

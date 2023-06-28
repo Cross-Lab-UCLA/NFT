@@ -45,8 +45,15 @@ if ~isempty(find(isfield(mesh, {'name','num_class'}) == 0,1))
     error('BEM:bem_generate_eeg_matrices:mesh','%s','Invalid mesh');
 end
 
-a = sprintf('"%s" -f "%s" -o %d "%s"', ...
-    conf.bem_matrix_program, model.name, model.mod, mesh.name);
+%a = sprintf('"%s" -f "%s" -o %d "%s"', ...
+%    conf.bem_matrix_program, model.name, model.mod, mesh.name);
+
+path_unix = conf.bem_matrix_program;
+path_unix(strfind(path_unix,'\'))='/';
+path_unix = strrep(path_unix,'E:','/mnt/e')
+
+a = sprintf('wsl "%s" -f "%s" -o %d "%s"', ...
+    path_unix, model.name, model.mod, mesh.name);
 
 for i = 1:mesh.num_class
     a = sprintf('%s %d=%0.5g', a, i, model.cond(i));

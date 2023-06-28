@@ -149,7 +149,7 @@ function pushbuttonManualCoreg_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % manual coregistration
-[C1,E1] = mesh_readsmf([handles.MeshFolder '/Scalp.smf'],0,0,0,1); % subject's scalp mesh
+[C1,E1] = mesh_readsmf([handles.MeshFolder filesep 'Scalp.smf'],0,0,0,1); % subject's scalp mesh
 
 handles.Coord = C1;
 handles.Elem = E1;

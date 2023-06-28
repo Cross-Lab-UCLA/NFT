@@ -1,4 +1,4 @@
-function varargout = Warping_mesh(varargin)
+function varargout = Warping_meshLM(varargin)
 % WARPING_MESH M-file for Warping_mesh.fig
 %      WARPING_MESH, by itself, creates a new WARPING_MESH or raises the existing
 %      singleton*.
